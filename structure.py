@@ -1,5 +1,14 @@
-from pydantic import BaseModel
 
+
+from pydantic import BaseModel, ConfigDict
+
+class TodoResponse(BaseModel):
+    id: int
+    title: str
+    completed: bool
+
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TodoResponse(BaseModel):
