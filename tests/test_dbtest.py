@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.main import app
 from app.database import get_db
-from app.models import Base
+from app.model import Base
 
 
 TEST_DATABASE_URL = "postgresql://postgres:1234@localhost:5432/todo_db"

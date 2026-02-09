@@ -2,12 +2,12 @@ from sqlite3 import IntegrityError
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from database import get_db
-import model, structure
-from database import engine, SessionLocal
+from app.database import get_db
+import app.model as model, structure
+from app.database import engine, SessionLocal
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-import extraction
-from extraction import oauth2_scheme # Import from your extraction file
+import app.auth as auth
+from app.auth import oauth2_scheme # Import from your extraction file
 
 app = FastAPI()
 
@@ -21,7 +21,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 @app.post("/register")
 def register(user: structure.UserCreate, db: Session = Depends(get_db)):
-    hashed = extraction.hash_password(user.password)
+    hashed = auth.hash_password(user.password)
     new_user = model.User(
         username=user.username,
         hashed_password=hashed
@@ -43,10 +43,10 @@ def register(user: structure.UserCreate, db: Session = Depends(get_db)):
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(model.User).filter(model.User.username == form_data.username).first()
-    if not user or not extraction.verify_password(form_data.password, user.hashed_password):
+    if not user or not auth.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     
-    access_token = extraction.create_access_token(data={"sub": user.username})
+    access_token = auth.create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
 model.Base.metadata.create_all(bind=engine)
@@ -95,7 +95,7 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    username = extraction.decode_access_token(token)
+    username = auth.decode_access_token(token)
     user = db.query(model.User).filter(model.User.username == username).first()
 
     if not user:
