@@ -1,3 +1,4 @@
+from sqlite3 import IntegrityError
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
@@ -21,10 +22,23 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 @app.post("/register")
 def register(user: structure.UserCreate, db: Session = Depends(get_db)):
     hashed = extraction.hash_password(user.password)
-    new_user = model.User(username=user.username, hashed_password=hashed)
+    new_user = model.User(
+        username=user.username,
+        hashed_password=hashed
+    )
+
     db.add(new_user)
-    db.commit()
-    return {"message": "User created"}
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()  # 🔥 THIS IS REQUIRED
+        raise HTTPException(
+            status_code=400,
+            detail="Username already exists"
+        )
+
+    return {"message": "User created successfully"}
 
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
