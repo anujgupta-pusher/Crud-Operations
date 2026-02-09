@@ -41,3 +41,13 @@ def test_create_todo():
     assert response.status_code in (200, 201)
     data = response.json()
     assert data["title"] == "Buy milk"
+
+def test_get_todos_list():
+    
+    test_app.post("/todos", json={"title": "buy", "completed": False})
+    response = test_app.get("/todos")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert any(todo["title"] == "buy" for todo in data)
+
