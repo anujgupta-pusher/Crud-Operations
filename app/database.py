@@ -1,13 +1,20 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
-from dotenv import load_dotenv
+
 #DATABASE_URL = "postgresql://postgres:operation@localhost/todo_db"DATABASE_URL = "postgresql://postgres:newpassword@localhost:5432/todo_db"
 DATABASE_URL = "postgresql://postgres:1234@localhost:5432/todo_db"
+from dotenv import load_dotenv
+# app/database.py
+# REMOVE THIS: from tests.test_todos import DATABASE_URL 
+from app.config import DATABASE_URL
 
+# ... rest of your SQLAlchemy/database setup
+# from tests.test_todos import DATABASE_URL
 load_dotenv()
 
 import os
+
 
 
 SQLALCHEMY_DATABASE_URL = os.getenv(

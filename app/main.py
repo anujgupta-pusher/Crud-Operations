@@ -2,23 +2,31 @@ from sqlite3 import IntegrityError
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from app.database import get_db
-import app.model as model, structure
+from app.database import get_db, Base
+from app import model, structure
 from app.database import engine, SessionLocal
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from app.structure import UserCreate
+from app.auth import get_current_user
+# from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import app.auth as auth
-from app.auth import oauth2_scheme # Import from your extraction file
+
+from dotenv import load_dotenv
+load_dotenv()
 
 app = FastAPI()
 
+if __name__ == "__main__":
+    Base.metadata.create_all(bind=engine)
+    
 
 
 
 
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
+
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 @app.post("/register")
 def register(user: structure.UserCreate, db: Session = Depends(get_db)):
     hashed = auth.hash_password(user.password)
@@ -32,7 +40,7 @@ def register(user: structure.UserCreate, db: Session = Depends(get_db)):
     try:
         db.commit()
     except IntegrityError:
-        db.rollback()  # 🔥 THIS IS REQUIRED
+        db.rollback()  
         raise HTTPException(
             status_code=400,
             detail="Username already exists"
@@ -41,67 +49,14 @@ def register(user: structure.UserCreate, db: Session = Depends(get_db)):
     return {"message": "User created successfully"}
 
 @app.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(form_data: UserCreate, db: Session = Depends(get_db)):
     user = db.query(model.User).filter(model.User.username == form_data.username).first()
     if not user or not auth.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     
-    access_token = auth.create_access_token(data={"sub": user.username})
+    access_token = auth.create_access_token(data={"sub": str(user.id)})
     return {"access_token": access_token, "token_type": "bearer"}
 
-model.Base.metadata.create_all(bind=engine)
-
-
-
-
-
-@app.post("/todos", response_model=structure.TodoResponse)
-def create_todo(todo: structure.TodoCreate, db: Session = Depends(get_db)):
-    new_todo = model.Todo(title=todo.title)
-    db.add(new_todo)
-    db.commit()
-    db.refresh(new_todo)
-    return new_todo
-
-
-@app.get("/todos", response_model=List[structure.TodoResponse])
-def get_todos(db: Session = Depends(get_db)):
-    todos = db.query(model.Todo).all()
-    return todos
-
-
-@app.put("/todos/{todo_id}", response_model=structure.TodoResponse)
-def update_todo(todo_id: int, db: Session = Depends(get_db)):
-    todo = db.query(model.Todo).filter(model.Todo.id == todo_id).first()
-    if not todo:
-        raise HTTPException(status_code=404, detail="Todo not found")
-    todo.completed = True
-    db.commit()
-    db.refresh(todo)
-    return todo
-
-@app.delete("/todos/{todo_id}")
-def delete_todo(todo_id: int, db: Session = Depends(get_db)):
-    todo = db.query(model.Todo).filter(model.Todo.id == todo_id).first()
-    if not todo:
-        raise HTTPException(status_code=404, detail="Todo not found")
-    db.delete(todo)
-    db.commit()
-    return {"message": "Todo deleted"}
-
-
-
-def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
-):
-    username = auth.decode_access_token(token)
-    user = db.query(model.User).filter(model.User.username == username).first()
-
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-
-    return user
     
 @app.post("/todos", response_model=structure.TodoResponse)
 def create_todo(
@@ -126,4 +81,13 @@ def get_todos(
     return db.query(model.Todo).filter(
         model.Todo.user_id == current_user.id
     ).all()
+
+@app.delete("/todos", response_model=List[structure.TodoResponse])
+def get_todos(
+    db : Session = Depends(get_db),
+    current_user : model.User = Depends(get_current_user)
+):
+    return db.query(model.Todo).filter(
+        model.Todo.user_id == current_user.id
+        ).all()
 
