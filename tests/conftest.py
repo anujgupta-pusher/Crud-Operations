@@ -8,8 +8,8 @@ from app.database import get_db
 from app.model import Base
 
 
-DATABASE_URL = "postgresql://postgres:db123@localhost:5432/crud_db"
-# SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+# DATABASE_URL = "postgresql://postgres:db123@localhost:5432/crud_db"
+DATABASE_URL = "sqlite:///./test.db"
 
 
 engine = create_engine(DATABASE_URL)
