@@ -2,9 +2,9 @@ name: FastAPI CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   test:
@@ -27,16 +27,10 @@ jobs:
       - name: Run tests
         run: pytest -v
 
-name: CD - Deploy to Docker
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
   deploy:
+    needs: test
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout code
@@ -58,4 +52,3 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/todo-app:${{ github.sha }}
           cache-from: ""
           cache-to: ""
-
