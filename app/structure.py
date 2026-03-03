@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict
 class TodoCreate(BaseModel):
     title: str
 
+
 class TodoResponse(BaseModel):
     id: int
     title: str

@@ -8,11 +8,11 @@ from app.database import get_db
 from app.model import Base
 
 
-TEST_DATABASE_URL = "postgresql://postgres:password@localhost:5432/crud_db"
+DATABASE_URL = "postgresql://postgres:db123@localhost:5432/crud_db"
 # SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 
-engine = create_engine(TEST_DATABASE_URL)
+engine = create_engine(DATABASE_URL)
 TestingSessionLocal = sessionmaker(autoflush=False, autocommit=False, bind=engine)
 
 Base.metadata.create_all(bind=engine)

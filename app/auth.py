@@ -26,7 +26,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
     user = db.query(User).filter(user_id == User.id).first()
     if not user:
-        raise HTTPException(status_code=401)
+        raise HTTPException(status_code=401)    
     return user
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30

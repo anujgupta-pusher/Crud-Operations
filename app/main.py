@@ -9,7 +9,6 @@ from app.structure import UserCreate
 from app.auth import get_current_user
 # from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import app.auth as auth
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -26,7 +25,6 @@ if __name__ == "__main__":
 
 
 
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 @app.post("/register")
 def register(user: structure.UserCreate, db: Session = Depends(get_db)):
     hashed = auth.hash_password(user.password)
